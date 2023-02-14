@@ -1,9 +1,12 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:stripe_payment/stripe_payment.dart';
+
 import 'package:stripe_app/bloc/payment/payment_bloc.dart';
+import 'package:stripe_app/helpers/helpers.dart';
+import 'package:stripe_app/services/services.dart';
 
 class TotalPayButton extends StatelessWidget {
   const TotalPayButton({super.key});
@@ -11,6 +14,8 @@ class TotalPayButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+
+    final payBloc = BlocProvider.of<PaymentBloc>(context).state;
 
     return Container(
       width: width,
@@ -36,19 +41,12 @@ class TotalPayButton extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
+              const Text('Total',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               Text(
-                'Total',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                '\$ 250.55 USD',
-                style: TextStyle(
-                  fontSize: 20,
-                ),
+                '${payBloc.amountPayable} ${payBloc.currency}',
+                style: const TextStyle(fontSize: 20),
               ),
             ],
           ),
@@ -82,7 +80,34 @@ class _BtnPay extends StatelessWidget {
       shape: const StadiumBorder(),
       elevation: 0,
       color: Colors.black,
-      onPressed: () {},
+      onPressed: () async {
+        showLoading(context);
+        final state = BlocProvider.of<PaymentBloc>(context).state;
+        final stripeService = StripeService();
+
+        final card = state.card;
+        final montYear = card.expiracyDate.split('/');
+
+        final response = await stripeService.payWithCardExist(
+            amount: state.mountPayString,
+            currency: state.currency,
+            card: CreditCard(
+              number: card.cardNumber,
+              expMonth: int.parse(montYear[0]),
+              expYear: int.parse(montYear[1]),
+            ));
+
+        // ignore: use_build_context_synchronously
+        Navigator.pop(context);
+        if (response.ok) {
+          // ignore: use_build_context_synchronously
+          showAlert(context, 'New Card it is ok!!!', 'Everything is fine');
+        } else {
+          // ignore: use_build_context_synchronously
+          showAlert(context, 'Payment failed',
+              response.msg ?? 'Something went wrong');
+        }
+      },
       child: Row(
         children: const [
           Icon(FontAwesomeIcons.solidCreditCard, color: Colors.white),
@@ -100,7 +125,15 @@ class _BtnPay extends StatelessWidget {
       shape: const StadiumBorder(),
       elevation: 0,
       color: Colors.black,
-      onPressed: () {},
+      onPressed: () async {
+        final state = BlocProvider.of<PaymentBloc>(context).state;
+        final stripeService = StripeService();
+
+        final response = await stripeService.payApplePayGooglePay(
+          amount: state.mountPayString,
+          currency: state.currency,
+        );
+      },
       child: Row(
         children: [
           Icon(

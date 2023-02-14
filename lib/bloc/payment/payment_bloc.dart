@@ -1,6 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
-import 'package:stripe_app/models/credit_car.dart';
+import 'package:stripe_app/models/models.dart';
 
 part 'payment_event.dart';
 part 'payment_state.dart';

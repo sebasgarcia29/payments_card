@@ -5,6 +5,7 @@ import 'package:flutter_credit_card/flutter_credit_card.dart';
 import 'package:stripe_app/bloc/blocs.dart';
 import 'package:stripe_app/data/data_cards.dart';
 import 'package:stripe_app/pages/pages.dart';
+import 'package:stripe_app/services/services.dart';
 import 'package:stripe_app/widgets/widgets.dart';
 import 'package:stripe_app/helpers/helpers.dart';
 
@@ -13,7 +14,10 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final stripeService = StripeService();
     final size = MediaQuery.of(context).size;
+    final paymentBloc = BlocProvider.of<PaymentBloc>(context);
+
     return Scaffold(
         appBar: AppBar(
           title: const Text('Payment'),
@@ -21,10 +25,21 @@ class HomePage extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: () async {
-                // showAlert(context, 'New card', 'Add a new card');
-                // await Future.delayed(const Duration(seconds: 2));
-                // Navigator.pop(context);
-                showAlert(context, 'New card', 'Add a new card');
+                showLoading(context);
+                final amount = paymentBloc.state.mountPayString;
+                final currency = paymentBloc.state.currency;
+                final response = await stripeService.payWithNewCard(
+                    amount: amount, currency: currency);
+                // ignore: use_build_context_synchronously
+                Navigator.pop(context);
+                if (response.ok) {
+                  // ignore: use_build_context_synchronously
+                  showAlert(context, 'Card ok!!!', 'Everything is fine');
+                } else {
+                  // ignore: use_build_context_synchronously
+                  showAlert(context, 'Payment failed',
+                      response.msg ?? 'Something went wrong');
+                }
               },
             ),
           ],

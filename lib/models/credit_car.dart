@@ -14,4 +14,10 @@ class CreditCardCustom {
     required this.expiracyDate,
     required this.cardHolderName,
   });
+
+  @override
+  String toString() {
+    print('cardNumber ${cardNumber} cardHolderName ${cardHolderName}');
+    return super.toString();
+  }
 }

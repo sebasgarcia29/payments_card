@@ -7,6 +7,8 @@ class PaymentState {
   final bool isCardEnable;
   final CreditCardCustom card;
 
+  String get mountPayString => '${(amountPayable * 100).floor()}';
+
   PaymentState({
     this.amountPayable = 375.55,
     this.currency = 'USD',
